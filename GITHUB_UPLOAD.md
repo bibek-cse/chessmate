@@ -1,16 +1,16 @@
-# Put ChessMate Puzzles on GitHub Pages (free)
+# Put ChessMate on GitHub Pages (free)
 
 You get a link like `https://bibek-cse.github.io/chessmate/` that works on any phone and installs as an app.
 
 ## Option A — from the browser (no software needed)
 
-1. Unzip `chessmate-puzzles.zip`. Inside is a folder called `chessmate`.
+1. Unzip `chessmate.zip`. Inside is a folder called `chessmate`.
 2. Go to https://github.com/new
    - Repository name: `chessmate`
    - Choose **Public** (GitHub Pages is free for public repos).
    - Leave "Add a README" unticked, then click **Create repository**.
 3. On the new repo page, click **uploading an existing file**.
-4. Open the `chessmate` folder on your computer, select **everything inside it** (not the folder itself), and drag it into the page. Wait until all files are listed, including the `engine`, `js`, `css` and `icons` folders.
+4. Open the `chessmate` folder on your computer, select **everything inside it** (not the folder itself), and drag it into the page. Wait until all files are listed, including the `engine`, `js`, `css`, `icons` and `docs` folders.
    - On a phone: the GitHub website can't upload folders well. Use a computer, or use Option B.
 5. Click **Commit changes**.
 6. Go to **Settings → Pages**:
@@ -20,18 +20,22 @@ You get a link like `https://bibek-cse.github.io/chessmate/` that works on any p
 
 **Check:** the repo's top level must show `index.html` directly, not `chessmate/index.html`. If you see an extra `chessmate` folder, the site will be at `.../chessmate/chessmate/`. Either use that link, or upload again from inside the folder.
 
-## Already uploaded the older ChessMate AI to this repo?
+## Already uploaded an older version to this repo?
 
-Delete the old files first, so stale code isn't cached: `js/game.js`, `js/puzzles.js`, `js/engine.js`, the `data` folder, `icons/icon.svg` and `GITHUB_UPLOAD.md`. In each file on GitHub, use the **…** menu → **Delete file**. Then upload the new files and choose to replace the existing ones. Phones that installed the old app pick up the new one the next time it is opened online.
+The simplest fix is to replace everything:
+1. In the repo, delete every old file and folder, or delete the repo and create it again with the same name.
+2. Upload all files from the new `chessmate` folder.
+
+Phones that installed the old app pick up the new one the next time it is opened online.
 
 ## Option B — with git (computer terminal)
 
 ```bash
-unzip chessmate-puzzles.zip
+unzip chessmate.zip
 cd chessmate
 git init
 git add .
-git commit -m "ChessMate Puzzles"
+git commit -m "ChessMate"
 git branch -M main
 git remote add origin https://github.com/<your-username>/chessmate.git
 git push -u origin main
@@ -41,15 +45,15 @@ Then do step 6 above (Settings → Pages → main / root).
 
 ## On your phone
 
-1. Open your Pages link in Chrome (Android) or Safari (iPhone) while online. Wait a few seconds; it downloads 15 hard puzzles in the background.
+1. Open your Pages link in Chrome (Android) or Safari (iPhone) while online. Pick your starting stage. The app then downloads about 12 puzzles at your level in the background.
 2. Tap ⚙ → **Install app on this phone**. On iPhone, use Share → **Add to Home Screen**.
-3. Optional: tap ⚙ → **Download 30 more puzzles now** before going offline.
+3. Optional: tap ⚙ → **Save app + 30 puzzles for offline** before going offline. Lessons and classic games always work offline.
 
 ## Updating the app later
 
 1. Edit or replace files in the repo (Add file → Upload files, or `git push`).
-2. Open `sw.js` and change the version line, for example `const V = 'crown-v1';` → `'crown-v2'`.
-   Make the same change in `js/app.js` at `const CACHE = 'crown-v1';`.
+2. Open `sw.js` and change the version line, for example `const V = 'chessmate-v3';` → `'chessmate-v4'`.
+   Make the same change in `js/app.js` at `const CACHE = 'chessmate-v3';`.
    This makes every installed phone fetch the new version.
 3. On the phone, open the app online once, then close it fully and reopen it.
 

@@ -1,168 +1,126 @@
 <div align="center">
 
-<img src="icons/crown.svg" width="88" alt="ChessMate crown logo">
+<img src="icons/crown.svg" width="84" alt="ChessMate crown logo">
 
-# ChessMate Puzzles
+# ChessMate
 
-**Hard chess puzzles in your pocket. No ads, no account, no mercy.**
+**Learn chess through puzzles: from your first fork at 500 to GM-level ideas at 3200+.**
 
-[![Open the app](https://img.shields.io/badge/▶%20OPEN%20THE%20APP-D9AE4A?style=for-the-badge&labelColor=0D1311)](https://bibek-cse.github.io/chessmate/)
-[![Install guide](https://img.shields.io/badge/INSTALL%20ON%20PHONE-7C9A8C?style=for-the-badge&labelColor=0D1311)](#-install-in-30-seconds)
+[![Open the app](https://img.shields.io/badge/▶%20OPEN%20THE%20APP-81B64C?style=for-the-badge&labelColor=302E2B)](https://bibek-cse.github.io/chessmate/)
+[![Install](https://img.shields.io/badge/INSTALL%20ON%20PHONE-EEEED2?style=for-the-badge&labelColor=302E2B)](#-install-in-30-seconds)
 
-![Free](https://img.shields.io/badge/free-forever-D9AE4A?style=flat-square&labelColor=0D1311)
-![Offline](https://img.shields.io/badge/works-offline-7C9A8C?style=flat-square&labelColor=0D1311)
-![Size](https://img.shields.io/badge/app%20size-~2%20MB-7C9A8C?style=flat-square&labelColor=0D1311)
-![Engine](https://img.shields.io/badge/engine-Stockfish%2019-EFE9E2?style=flat-square&labelColor=0D1311)
-![PWA](https://img.shields.io/badge/PWA-Android%20%7C%20iPhone%20%7C%20Desktop-EFE9E2?style=flat-square&labelColor=0D1311)
+![Free](https://img.shields.io/badge/free-forever-81B64C?style=flat-square&labelColor=302E2B)
+![Offline](https://img.shields.io/badge/works-offline-769656?style=flat-square&labelColor=302E2B)
+![Engine](https://img.shields.io/badge/engine-Stockfish%2019-EEEED2?style=flat-square&labelColor=302E2B)
+![Sources](https://img.shields.io/badge/puzzles-Lichess%20%2B%20Chess.com-EEEED2?style=flat-square&labelColor=302E2B)
+![Levels](https://img.shields.io/badge/levels-500%20→%203200%2B-81B64C?style=flat-square&labelColor=302E2B)
 
 </div>
 
-<table align="center">
-<tr>
-<td align="center" width="50%">
-<img src="docs/screenshot.png" width="280" alt="ChessMate Puzzles on a phone: green board, gold puzzle rating">
-</td>
-<td align="center" width="50%">
+<table align="center"><tr>
+<td align="center"><img src="docs/screen-puzzle.png" width="230" alt="Puzzle with engine notes"><br><sub><b>Puzzles</b> from real games</sub></td>
+<td align="center"><img src="docs/screen-lesson.png" width="230" alt="Textbook lesson"><br><sub><b>Learn</b>: the offline textbook</sub></td>
+<td align="center"><img src="docs/screen-progress.png" width="230" alt="Stage ladder"><br><sub><b>Progress</b>: stage ladder</sub></td>
+</tr></table>
+
+<div align="center">
 
 ### 📱 Scan to play
 
-<img src="docs/qr.png" width="220" alt="QR code linking to https://bibek-cse.github.io/chessmate/">
+<img src="docs/qr.png" width="200" alt="QR code for https://bibek-cse.github.io/chessmate/">
 
-**[bibek-cse.github.io/chessmate](https://bibek-cse.github.io/chessmate/)**
+**[bibek-cse.github.io/chessmate](https://bibek-cse.github.io/chessmate/)** · no store, no sign-up
 
-Point your phone camera at the code.<br>
-The app opens straight away, with no store and no sign-up.
-
-</td>
-</tr>
-</table>
+</div>
 
 ---
 
-## ♛ The idea
+## ♛ How it teaches
 
-Most puzzle apps keep you comfortable. **ChessMate keeps you uncomfortable**:
+Every puzzle is a short lesson:
 
-- every puzzle is rated **1700 or higher**;
-- each new puzzle is picked **just above your current rating**;
-- after you solve one, you can **play the position to the end against Stockfish at full strength**.
+1. **Where it happened:** each Lichess puzzle comes from a real game. You see the players, their ratings and the time control, and can **▶ watch the last 10 moves** that led to the position.
+2. **You solve it:** every move you play is **checked by the engine**. It shows Best / Good / Mistake / Blunder, the evaluation, and what the opponent would reply.
+3. **The idea:** a textbook note explains the theme (fork, deflection, zugzwang…) and links to the full lesson.
+4. **Other options:** the engine shows the **top 4 moves** in the starting position, with lines you can tap to watch on the board.
+5. **Play it out:** continue from the puzzle against Stockfish. Every move is analysed again, and you get an accuracy score at the end.
 
-> *Find the move. Then defend it against an engine that doesn't blink.*
+## ⚡ Four tabs
 
-## ⚡ Features
+| | |
+|---|---|
+| ♞ **Puzzles** | Online from **Lichess** (rated, from real games) and **Chess.com** (puzzle archive), saved for offline. Theme filter, plus puzzles from master and super-GM games. A **Missed** list for retries. |
+| ♝ **Learn** | An **offline textbook**: Opening, Middlegame tactics, Endgame, Strategy. 17 lessons, each with a position to solve. The engine accepts *any* good move, not only one. |
+| ♛ **Masters** | **6 classic games** offline (Opera Game, Immortal, Evergreen, Game of the Century…). Online, you can load **elite events** (Lichess broadcasts) and **recent Chess.com GM games**. Replay a game with engine notes, play **Guess the move**, or press **Play from here**. |
+| ♚ **Progress** | A **6-stage ladder**: Pawn 500 → Knight → Bishop → Rook → Queen → **King · GM 2500+**. Rating graph, strengths, weak themes with one-tap *Lesson* / *Train*, and your record against Stockfish. |
 
-<table>
-<tr>
-<td width="50%" valign="top">
+## 📈 The stage ladder
 
-**👑 Three levels**<br>
-Hard **1700+** · Very hard **1950+** · Brutal **2200+**
+| Stage | Name | Rating | Typical puzzles |
+|:-:|---|---|---|
+| 1 | Pawn | 500–899 | Hanging pieces, mate in 1, simple forks |
+| 2 | Knight | 900–1299 | Pins, skewers, mate in 2 |
+| 3 | Bishop | 1300–1699 | Discovered attacks, deflection, basic endgames |
+| 4 | Rook | 1700–2099 | Quiet moves, sacrifices, rook endgames |
+| 5 | Queen | 2100–2499 | Long calculation, defence, zugzwang |
+| 6 | King · GM | 2500+ | Master-game combinations, deep lines |
 
-**🎯 Tricky themes**<br>
-Sacrifice · quiet move · defence · in-between move · zugzwang · deflection · X-ray · mate in 3/4/5+ · long lines · endgames
-
-**⚔️ Play it out**<br>
-Take any puzzle into a full game against Stockfish 19. Choose 1, 2 or 4 seconds per move. No hints, no take-backs.
-
-</td>
-<td width="50%" valign="top">
-
-**🔁 Missed list**<br>
-Every puzzle you fail waits for you until you solve it.
-
-**💡 Hints that cost you**<br>
-Theme → piece to move (now unrated) → arrow.
-
-**📈 Live rating**<br>
-Your rating moves after every puzzle. Track your best streak and your wins and losses against Stockfish.
-
-**📴 Offline ready**<br>
-15 puzzles are always saved on your phone and refill whenever you're online.
-
-</td>
-</tr>
-</table>
-
-## 🎮 How a round works
-
-| Step | What happens |
-|:-:|---|
-| **1** | The opponent's move plays on the board. Watch it. |
-| **2** | Find the best reply. A wrong move counts as a miss. |
-| **3** | The opponent defends. Keep finding the right moves. |
-| **4** | Solved? **Next puzzle**, or **Play it out vs Stockfish**. |
+Each new puzzle is aimed **just above your rating**. Three correct in a row raises the challenge, and a miss lowers it. Your rating moves after every rated puzzle, so you climb or drop stages automatically.
 
 ## 📲 Install in 30 seconds
 
-| Android (Chrome) | iPhone / iPad (Safari) | Desktop (Chrome / Edge) |
+| Android (Chrome) | iPhone / iPad (Safari) | Desktop |
 |---|---|---|
-| Scan the QR code or open the link | Scan the QR code or open the link | Open the link |
-| Tap **⚙** → **Install app on this phone** | Tap **Share** → **Add to Home Screen** | Click the **install icon** in the address bar |
-| Open it once online to save puzzles | Open it once online to save puzzles | Done |
+| Scan the QR code | Scan the QR code | Open the link |
+| ⚙ → **Install app on this phone** | Share → **Add to Home Screen** | Install icon in the address bar |
+| ⚙ → **Save app + 30 puzzles for offline** | Same | Same |
 
-The installed app opens full screen with the gold crown icon. Before a flight, tap **⚙ → Download 30 more puzzles**.
+## 🔌 Online + offline
+
+| Works offline | Needs internet (then cached) |
+|---|---|
+| Lessons, classic games, saved puzzles, Stockfish on your phone, your progress | New puzzles, elite events, Chess.com GM games, Lichess cloud analysis |
+
+By default, analysis asks the **Lichess cloud** first (it costs your phone almost nothing). If the position isn't in the cloud, Stockfish runs **on the phone** instead. You can choose *Auto / Cloud / Phone* in ⚙.
 
 ## 🛠 Run or host it yourself
-
-No build step, no `npm install`, no framework. These are plain files:
 
 ```bash
 git clone https://github.com/bibek-cse/chessmate.git
 cd chessmate
-python3 -m http.server 8080        # then open http://localhost:8080
+python3 -m http.server 8080        # open http://localhost:8080
 ```
 
-You can host your own copy free on GitHub Pages; see **[GITHUB_UPLOAD.md](GITHUB_UPLOAD.md)**.
+No build step and no framework. To host it free, see **[GITHUB_UPLOAD.md](GITHUB_UPLOAD.md)**.
 
-<details>
-<summary><b>How it's built</b></summary>
-
-```
-Lichess puzzle API ──► puzzles saved on your phone ──► board
-                                                         │
-                      solved? ──► Play it out ──► Stockfish 19 (WebAssembly, background thread)
-```
+<details><summary><b>Files</b></summary>
 
 | Path | What it does |
 |---|---|
-| `index.html`, `css/` | One page, green-and-gold theme, cburnett pieces |
-| `js/app.js` | Puzzle flow, online fetch + offline queue, rating, play-it-out |
-| `js/board.js` | Touch board: tap or drag, arrows, promotion picker |
-| `js/chess.js` | Chess rules (chess.js 1.4) |
-| `js/store.js` | Saves progress on the device |
+| `js/app.js` | The four tabs, puzzle flow, play-it-out, settings |
+| `js/puzzles.js` | Lichess + Chess.com fetch, offline queue, stages, rating |
+| `js/lessons.js` | The textbook (17 engine-checked lessons) |
+| `js/classics.js` | 6 classic games (each checked move by move) |
+| `js/engine.js` | Lichess cloud eval → Stockfish on the phone |
+| `js/util.js`, `js/game.js` | Move judging, game analysis, PGN |
+| `js/board.js`, `js/chess.js` | Touch board, chess rules |
 | `engine/` | Stockfish 19 lite (WebAssembly) |
-| `sw.js`, `manifest.webmanifest` | Offline cache and install |
-| `docs/` | Screenshot and QR code |
+| `sw.js`, `manifest.webmanifest` | Offline cache, install |
 
 </details>
 
-<details>
-<summary><b>FAQ</b></summary>
+<details><summary><b>Good to know</b></summary>
 
-**Why does Brutal sometimes take a moment to load?**
-Without a login, Lichess pitches puzzles at an average player. The app downloads more in the background and keeps only the 2200+ ones.
-
-**Is Stockfish really full strength on a phone?**
-It's the "lite" build of Stockfish 19, chosen so phones stay cool. At full strength it is still far stronger than any human.
-
-**Where is my progress stored?**
-Only on your device. There are no accounts and no tracking. Resetting is in ⚙.
-
-**Why do I see "too many requests"?**
-Lichess allows one request at a time. The app waits a minute and tries again.
+- Without a Lichess login, puzzles above about 2400 are rarer. The app keeps downloading and serves the closest it has.
+- Chess.com puzzles have no rating, so they are unrated practice.
+- Lichess allows one request at a time. If it says "slow down", the app waits a minute.
+- Stockfish runs in its *lite* build so phones stay cool. It is still far stronger than any human.
+- Progress is stored only on your device. There are no accounts and no tracking.
 
 </details>
 
 ## 🙏 Credits
 
-Puzzles: [Lichess open database](https://database.lichess.org/#puzzles) (CC0) · Engine: [Stockfish](https://github.com/official-stockfish/Stockfish) (GPLv3, via [stockfish.js](https://github.com/nmrugg/stockfish.js); licence in `engine/`) · Rules: [chess.js](https://github.com/jhlywa/chess.js) (BSD-2) · Pieces: cburnett (CC BY-SA 3.0)
+Puzzles: [Lichess database](https://database.lichess.org/#puzzles) (CC0) and the [Chess.com public API](https://www.chess.com/news/view/published-data-api) · Engine: [Stockfish](https://github.com/official-stockfish/Stockfish) (GPLv3) via [stockfish.js](https://github.com/nmrugg/stockfish.js) · Rules: [chess.js](https://github.com/jhlywa/chess.js) (BSD-2) · Pieces: cburnett (CC BY-SA 3.0). Lessons were written for this app. Classic game scores are public domain.
 
-<div align="center">
-
-<br>
-
-<img src="icons/crown.svg" width="36" alt="">
-
-**Made by [Bibek](https://github.com/bibek-cse)**. If a puzzle beat you, ⭐ the repo and try again.
-
-</div>
+<div align="center"><br><img src="icons/crown.svg" width="34" alt=""><br><b>Made by <a href="https://github.com/bibek-cse">Bibek</a></b>. If a puzzle beat you, ⭐ the repo and try again.</div>

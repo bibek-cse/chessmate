@@ -79,7 +79,7 @@ class Engine {
     this.lastSource = '';
     this._saveT = 0;
   }
-  get settings() { return get('settings', { engineMode: 'auto', depth: 14, gameDepth: 12 }); }
+  get settings() { return Object.assign({ engineMode: 'auto', depth: 14, gameDepth: 12 }, get('settings', {})); }
   online() { return navigator.onLine !== false; }
   _remember(key, r) {
     this.cache.set(key, r);

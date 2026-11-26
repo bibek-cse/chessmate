@@ -1,3 +1,3 @@
-{ "name": "ChessMate Puzzles", "short_name": "ChessMate", "start_url": "./index.html", "display": "standalone",
-  "background_color": "#0D1311", "theme_color": "#0D1311",
+{ "name": "ChessMate — learn chess through puzzles", "short_name": "ChessMate", "start_url": "./index.html", "display": "standalone",
+  "background_color": "#F7F5F0", "theme_color": "#F7F5F0",
   "icons": [{ "src": "icons/crown.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }] }

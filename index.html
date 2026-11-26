@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0D1311">
-<meta name="description" content="Hard chess puzzles from Lichess, saved for offline, and play any puzzle out against full-strength Stockfish.">
-<title>ChessMate Puzzles</title>
+<meta name="theme-color" content="#F7F5F0">
+<meta name="description" content="Learn chess through puzzles: real-game puzzles from Lichess and Chess.com, an offline textbook, master games and engine analysis of every move. 500 to 3200+.">
+<title>ChessMate — learn chess through puzzles</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/crown.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/crown.svg">
@@ -14,28 +14,14 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand"><img src="icons/crown.svg" alt="" width="30" height="30">ChessMate <em>Puzzles</em></div>
-  <div class="me"><b id="rating">1800</b><span id="streak"></span><button id="gear" aria-label="Settings">⚙</button></div>
+  <a class="brand" href="#puzzles"><img src="icons/crown.svg" alt="" width="32" height="32"><span>ChessMate</span></a>
+  <div class="me"><span id="hstage" class="pill"></span><b id="hrating"></b><button id="gear" aria-label="Settings">⚙</button></div>
 </header>
-<main>
-  <div class="filters">
-    <div class="seg" id="lv"></div>
-    <div class="row"><select id="theme" aria-label="Theme"></select><button class="chip" id="missed">Missed 0</button></div>
-  </div>
-  <div class="split">
-    <div class="bwrap"><div class="lab" id="topLab"></div><div id="board"></div><div class="lab dim" id="botLab"></div></div>
-    <div class="side">
-      <div class="bignum" id="big"></div>
-      <p id="st" class="st">Loading…</p>
-      <div class="row" id="acts"></div>
-      <div id="meta"></div>
-      <p class="net" id="net"></p>
-    </div>
-  </div>
-</main>
+<main id="main"></main>
+<nav id="tabs"><a href="#puzzles"><i>♞</i>Puzzles</a><a href="#learn"><i>♝</i>Learn</a><a href="#masters"><i>♛</i>Masters</a><a href="#progress"><i>♚</i>Progress</a></nav>
 <div id="sheet" hidden></div>
 <div id="toast" hidden></div>
-<footer>Puzzles: Lichess open database (CC0) · Engine: Stockfish 19 lite (GPLv3) · Pieces: cburnett (CC BY-SA 3.0)</footer>
+<footer>Puzzles: Lichess (CC0) &amp; Chess.com public API · Engine: Stockfish 19 (GPLv3) · Pieces: cburnett (CC BY-SA 3.0)</footer>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

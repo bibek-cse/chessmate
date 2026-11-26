@@ -40,7 +40,7 @@ export function gamesFromPgn(text, me) {
     out.push(newGame({ source: 'imported', startFen, moves, white: h.White || 'White', black: h.Black || 'Black',
       result: h.Result || '*', date: ((h.UTCDate || h.Date || '').includes('?') ? '' : (h.UTCDate || h.Date || '').replace(/\./g, '-')) || undefined,
       userColor: lw && (h.White || '').toLowerCase() === lw ? 'w' : lw && (h.Black || '').toLowerCase() === lw ? 'b' : null,
-      event: h.Event || '' }));
+      event: h.Event || '', round: h.Round || '', welo: h.WhiteElo || '', belo: h.BlackElo || '', site: h.Site || '', link: h.Link || '' }));
   }
   return out;
 }

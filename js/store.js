@@ -9,3 +9,4 @@ export function set(k, v) {
   mem[k] = v;
   try { localStorage.setItem(P + k, JSON.stringify(v)); return true; } catch (e) { return false; }
 }
+export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
