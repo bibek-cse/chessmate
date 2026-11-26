@@ -262,6 +262,7 @@ function openSheet() {
     <h3>Offline</h3><p class="muted" id="offst">${ready().length} puzzles ready for this filter · ${queue().length} saved in total.</p>
     <button class="btn" id="dl">Download ${QUEUE_TARGET * 2} more puzzles now</button>
     <h3>Stockfish think time (play it out)</h3><div class="seg" id="think">${[1000, 2000, 4000].map(v => `<button data-v="${v}" class="${o.think === v ? 'on' : ''}">${v / 1000}s</button>`).join('')}</div>
+    <h3>Share with a friend</h3><div class="share"><img src="docs/qr.png" alt="QR code for the app link" width="150" height="150"><div><p class="muted">Let them scan this, or send the link.</p><button class="btn" id="copy">Copy link</button></div></div>
     <h3>Progress</h3><button class="btn ghost danger" id="reset">Reset rating and history</button></div>`;
   $('#sheet').hidden = false;
   $('#close').onclick = () => $('#sheet').hidden = true;
@@ -279,10 +280,11 @@ function openSheet() {
     $('#dl').disabled = false; $('#offst').textContent = `${ready().length} puzzles ready for this filter · ${queue().length} saved in total.`; header();
   };
   document.querySelectorAll('#think button').forEach(b => b.onclick = () => { set('opts', Object.assign(opts(), { think: +b.dataset.v })); openSheet(); });
+  $('#copy').onclick = async () => { const u = location.href.split('#')[0].replace(/index\.html$/, ''); try { await navigator.clipboard.writeText(u); toast('Link copied'); } catch (e) { toast(u); } };
   $('#reset').onclick = e => { if (!e.target.dataset.arm) { e.target.dataset.arm = 1; e.target.textContent = 'Tap again to reset'; return; } set('prof', {}); set('seen', {}); set('missed', []); set('games', { w: 0, d: 0, l: 0 }); toast('Progress reset'); openSheet(); header(); };
 }
 const CACHE = 'crown-v1'; // keep in sync with sw.js
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/crown.svg', 'css/app.css', 'css/pieces.css', 'js/app.js', 'js/board.js', 'js/chess.js', 'js/store.js', 'engine/stockfish-19-lite-single.js', 'engine/stockfish-19-lite-single.wasm'];
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/crown.svg', 'docs/qr.png', 'css/app.css', 'css/pieces.css', 'js/app.js', 'js/board.js', 'js/chess.js', 'js/store.js', 'engine/stockfish-19-lite-single.js', 'engine/stockfish-19-lite-single.wasm'];
 
 // ---------- wire up ----------
 $('#lv').onclick = e => { const b = e.target.closest('button'); if (!b) return; set('opts', Object.assign(opts(), { level: b.dataset.v, mode: 'new' })); nextPuzzle(); };
