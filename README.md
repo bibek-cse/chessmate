@@ -1,5 +1,7 @@
 # ChessMate AI — offline-first chess training
 
+Link: https://bibek-cse.github.io/chessmate/
+
 A light, free web app for players rated about 500–3200. It has no build step and no framework.
 The whole download is about 2 MB, and the engine (1.8 MB) is downloaded once and then cached.
 
