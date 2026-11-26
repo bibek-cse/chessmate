@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#0D1311">
 <meta name="description" content="Hard chess puzzles from Lichess, saved for offline, and play any puzzle out against full-strength Stockfish.">
 <title>ChessMate Puzzles</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -23,8 +23,9 @@
     <div class="row"><select id="theme" aria-label="Theme"></select><button class="chip" id="missed">Missed 0</button></div>
   </div>
   <div class="split">
-    <div id="board"></div>
+    <div class="bwrap"><div class="lab" id="topLab"></div><div id="board"></div><div class="lab dim" id="botLab"></div></div>
     <div class="side">
+      <div class="bignum" id="big"></div>
       <p id="st" class="st">Loading…</p>
       <div class="row" id="acts"></div>
       <div id="meta"></div>

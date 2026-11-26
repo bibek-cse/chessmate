@@ -146,12 +146,22 @@ function nextPuzzle() {
   header(); fill(header);
 }
 function apply(fen, mv) { const c = new Chess(fen); try { const m = c.move(mv); return { fen: c.fen(), from: m.from, to: m.to, san: m.san, uci: m.lan }; } catch (e) { return null; } }
-function status(h, cls) { const e = $('#st'); e.className = 'st ' + (cls || ''); e.innerHTML = h; }
+function status(h, cls) { const e = $('#st'); e.className = 'st ' + (cls || ''); e.innerHTML = h; labels(); }
+function labels() {
+  const col = c => c === 'w' ? 'WHITE' : 'BLACK', opp = me === 'w' ? 'b' : 'w';
+  const oppName = mode === 'game' ? 'STOCKFISH' : t ? 'PUZZLE' : '';
+  $('#topLab').textContent = oppName ? `${oppName} · ${col(opp)}` : '';
+  $('#botLab').textContent = mode === 'game' || t ? `YOU · ${col(me)}` : '';
+  const big = $('#big');
+  if (mode === 'game' && game) { big.innerHTML = `<b>${new Chess(game.fen).moveNumber()}</b><span>MOVE</span>`; }
+  else if (t) big.innerHTML = `<b>${t.p.rating}</b><span>PUZZLE RATING</span>`;
+  else big.innerHTML = '';
+}
 function draw(msg, cls) {
   board.set(t.fen, { last: t.last, white: me === 'w', interactive: !t.done && !t.busy, arrows: t.arrows || [], marks: t.marks || {} });
   status(msg || (t.done ? (t.failed ? 'Done — this one goes to your Missed list.' : 'Solved!') : `Find the best move for <b>${me === 'w' ? 'White' : 'Black'}</b>`), cls || (t.done && !t.failed ? 'good' : ''));
   buttons();
-  if (t.done) $('#meta').innerHTML = `<p>Puzzle rating <b>${t.p.rating}</b>${t.delta != null ? ` · your rating ${t.delta >= 0 ? '+' : ''}${t.delta}` : ' · unrated'}</p><p class="tags">${t.p.themes.map(x => `<span>${esc(tname(x))}</span>`).join('')}</p><p class="muted"><a href="https://lichess.org/training/${esc(t.p.id)}" target="_blank" rel="noopener">View on Lichess</a></p>`;
+  if (t.done) $('#meta').innerHTML = `<p>${t.delta != null ? `Your rating ${t.delta >= 0 ? '+' : ''}${t.delta} → <b>${prof().rating}</b>` : 'Unrated attempt'}</p><p class="tags">${t.p.themes.map(x => `<span>${esc(tname(x))}</span>`).join('')}</p><p class="muted"><a href="https://lichess.org/training/${esc(t.p.id)}" target="_blank" rel="noopener">View on Lichess</a></p>`;
 }
 function buttons() {
   if (mode === 'game') { $('#acts').innerHTML = game && game.over ? '<button class="btn gold" id="back">Back to puzzles</button><button class="btn" id="again">Play again</button>' : '<button class="btn ghost danger" id="resign">Resign</button>'; }
