@@ -4,24 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111827">
-<meta name="description" content="Offline-first chess training: puzzles, replay from your own games, unlimited analysis.">
-<title>ChessMate AI</title>
+<meta name="description" content="Hard chess puzzles from Lichess, saved for offline, and play any puzzle out against full-strength Stockfish.">
+<title>ChessMate Puzzles</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/crown.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/crown.svg">
 <link rel="stylesheet" href="css/pieces.css">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 <header class="top">
-  <a href="#home" class="brand"><span class="logo pc wn"></span>ChessMate <em>AI</em></a>
-  <span id="net" class="pill">…</span>
+  <div class="brand"><img src="icons/crown.svg" alt="" width="30" height="30">ChessMate <em>Puzzles</em></div>
+  <div class="me"><b id="rating">1800</b><span id="streak"></span><button id="gear" aria-label="Settings">⚙</button></div>
 </header>
-<main id="main"><p class="muted" style="padding:24px">Loading…</p></main>
-<nav id="tabs">
-  <a href="#home">Home</a><a href="#puzzles">Puzzles</a><a href="#play">Play</a><a href="#games">Games</a><a href="#stats">Progress</a>
-</nav>
+<main>
+  <div class="filters">
+    <div class="seg" id="lv"></div>
+    <div class="row"><select id="theme" aria-label="Theme"></select><button class="chip" id="missed">Missed 0</button></div>
+  </div>
+  <div class="split">
+    <div id="board"></div>
+    <div class="side">
+      <p id="st" class="st">Loading…</p>
+      <div class="row" id="acts"></div>
+      <div id="meta"></div>
+      <p class="net" id="net"></p>
+    </div>
+  </div>
+</main>
+<div id="sheet" hidden></div>
 <div id="toast" hidden></div>
-<footer class="foot">Engine: Stockfish 19 lite (GPLv3) · online analysis &amp; puzzles: Lichess open API · pieces: cburnett (CC BY-SA 3.0)</footer>
+<footer>Puzzles: Lichess open database (CC0) · Engine: Stockfish 19 lite (GPLv3) · Pieces: cburnett (CC BY-SA 3.0)</footer>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
