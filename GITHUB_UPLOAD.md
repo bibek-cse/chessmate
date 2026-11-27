@@ -52,8 +52,8 @@ Then do step 6 above (Settings → Pages → main / root).
 ## Updating the app later
 
 1. Edit or replace files in the repo (Add file → Upload files, or `git push`).
-2. Open `sw.js` and change the version line, for example `const V = 'chessmate-v3';` → `'chessmate-v4'`.
-   Make the same change in `js/app.js` at `const CACHE = 'chessmate-v3';`.
+2. Open `sw.js` and change the version line, for example `const V = 'chessmate-v4';` → `'chessmate-v5'`.
+   Make the same change in `js/app.js` at `const CACHE = 'chessmate-v4';`.
    This makes every installed phone fetch the new version.
 3. On the phone, open the app online once, then close it fully and reopen it.
 

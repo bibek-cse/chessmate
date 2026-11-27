@@ -1,9 +1,9 @@
 // ChessMate — learn chess through puzzles, lessons and master games. Offline-first, online-updated.
 import { Chess } from './chess.js';
-import { Board } from './board.js';
+import { Board, badgeHTML, badgeName } from './board.js';
 import { get, set } from './store.js';
 import { engine } from './engine.js';
-import { esc, uciObj, apply, turn, lineSan, numbered, povVal, wpFor, winPct, fmtScore, CLS, judgeMove } from './util.js';
+import { esc, uciObj, apply, turn, lineSan, numbered, povVal, wpFor, winPct, fmtScore, CLS, judgeMove, quickClass, hangingSquares, enPrise, isSacrifice, bookName } from './util.js';
 import * as P from './puzzles.js';
 import * as G from './game.js';
 import { CHAPTERS, LESSONS, THEME_NOTES } from './lessons.js';
@@ -19,14 +19,20 @@ window.__cm = S;
 
 // ---------- small UI helpers ----------
 function toast(t, ms = 2600) { const e = $('#toast'); e.innerHTML = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => e.hidden = true, ms); }
-const stageHTML = () => `<div class="lab top" data-lab="top"></div><div class="stage"><div class="ebar"><div class="fill"></div><span class="elab"></span></div><div class="bd"></div></div><div class="lab bot" data-lab="bot"></div>`;
+const stageHTML = () => `<div class="lab top" data-lab="top"><span class="nm"></span><span class="clk"></span></div><div class="stage"><div class="ebar"><div class="fill"></div><span class="elab"></span></div><div class="bd"></div></div><div class="lab bot" data-lab="bot"><span class="nm"></span><span class="clk"></span></div>`;
 function setEval(el, sc, white) {
   if (!el) return; el.hidden = false;
   const wp = sc ? winPct(sc) : 50;
   el.querySelector('.fill').style.height = wp + '%'; el.classList.toggle('flip', !white);
   const l = el.querySelector('.elab'); l.textContent = sc ? fmtScore(sc) : ''; l.classList.toggle('top', (wp < 50) === white);
 }
-function labels(top, bot) { const t = $('[data-lab=top]'), b = $('[data-lab=bot]'); if (t) t.textContent = top || ''; if (b) b.textContent = bot || ''; }
+function labels(top, bot) { const t = $('[data-lab=top] .nm'), b = $('[data-lab=bot] .nm'); if (t) t.textContent = top || ''; if (b) b.textContent = bot || ''; }
+function clocks(top, bot, active) {
+  const t = $('[data-lab=top] .clk'), b = $('[data-lab=bot] .clk');
+  if (t) { t.textContent = top || ''; t.className = 'clk' + (top ? ' on' : '') + (active === 'top' ? ' run' : '') + (/^0:[0-1]\d/.test(top || '') ? ' low' : ''); }
+  if (b) { b.textContent = bot || ''; b.className = 'clk' + (bot ? ' on' : '') + (active === 'bot' ? ' run' : '') + (/^0:[0-1]\d/.test(bot || '') ? ' low' : ''); }
+}
+const fmtClock = ms => { ms = Math.max(0, ms); const s = Math.ceil(ms / 1000); return s < 20 && ms < 20000 ? `0:${String(Math.floor(ms / 1000)).padStart(2, '0')}.${Math.floor(ms % 1000 / 100)}` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 const colName = c => c === 'w' ? 'WHITE' : 'BLACK';
 function header() {
   const pr = P.profile(), st = P.stageOf(pr.rating);
@@ -35,10 +41,10 @@ function header() {
 function noteHTML(n) {
   if (!n.j) return `<div class="note"><b>${esc(n.san)}</b> <span class="muted">analysing…</span></div>`;
   if (!n.j.cls) return `<div class="note"><b>${esc(n.san)}</b> <span class="muted">no engine result</span></div>`;
-  const c = CLS[n.j.cls], side = n.side;
-  const ev = n.j.after && n.j.after.mated ? 'Checkmate' : fmtScore(n.j.after);
-  return `<div class="note c-${c[2]}"><span class="sym">${c[0] || '•'}</span><div><b>${esc(n.san)}</b> — ${c[1]} <span class="ev">${ev}</span>` +
-    (n.j.cls !== 'best' && n.j.bestSan ? `<br><small>Best was <b>${esc(n.j.bestSan)}</b>${n.j.lossWp >= 10 ? ` · you lost ${Math.round(n.j.lossWp)}% winning chances` : ''}${n.j.replyLine && n.j.lossWp >= 20 ? ` · reply: ${esc(lineSan(n.fenAfter, n.j.replyLine, 3).join(' '))}` : ''}</small>` : '') + `</div></div>`;
+  const c = CLS[n.j.cls];
+  const ev = n.j.after && n.j.after.mated ? 'Checkmate' : n.j.after ? fmtScore(n.j.after) : '';
+  return `<div class="note c-${c[2]}">${badgeHTML(n.j.cls)}<div><b>${esc(n.san)}</b> — ${c[1]} <span class="ev">${ev}</span>${n.j.cls === 'book' && n.j.opening ? `<br><small>${esc(n.j.opening)}</small>` : ''}` +
+    (!['best', 'brilliant', 'great', 'book', 'forced'].includes(n.j.cls) && n.j.bestSan ? `<br><small>Best was <b>${esc(n.j.bestSan)}</b>${n.j.lossWp >= 10 ? ` · you lost ${Math.round(n.j.lossWp)}% winning chances` : ''}${n.j.replyLine && n.j.lossWp >= 20 ? ` · reply: ${esc(lineSan(n.fenAfter, n.j.replyLine, 3).join(' '))}` : ''}</small>` : '') + `</div></div>`;
 }
 async function analyseInto(list, idx, render) {
   const n = list[idx];
@@ -95,7 +101,7 @@ function viewPuzzles() {
   function draw(msg, cls) {
     if (!t) return;
     const last = t.last || null;
-    board.set(t.fen, { last, white: t.me === 'w', interactive: !t.done && !t.busy, arrows: t.arrows || [], marks: t.marks || {} });
+    board.set(t.fen, { last, white: t.me === 'w', interactive: !t.done && !t.busy, arrows: t.arrows || [], marks: t.marks || {}, badge: t.badge, sound: true });
     labels(`${t.p.src === 'chesscom' ? 'PUZZLE' : 'OPPONENT'} · ${colName(t.me === 'w' ? 'b' : 'w')}`, `YOU · ${colName(t.me)}`);
     status(msg || (t.done ? (t.failed ? 'Done. This one goes to your Missed list.' : 'Solved! ✓') : `Find the best move for <b>${t.me === 'w' ? 'White' : 'Black'}</b>${t.p.rating ? ` · puzzle ${t.p.rating}` : ''}`), cls || (t.done && !t.failed ? 'good' : ''));
     $('#acts').innerHTML = t.done
@@ -118,7 +124,9 @@ function viewPuzzles() {
     if (!t || t.done || t.busy) return;
     const before = t.fen, r = apply(before, m); if (!r) return;
     const want = t.p.moves[t.step], ok = r.uci === want || new Chess(r.fen).isCheckmate();
-    const n = { san: r.san, uci: r.uci, fenBefore: before, fenAfter: r.fen, side: t.me, ok }; t.notes.push(n); analyseInto(t.notes, t.notes.length - 1, renderNotes);
+    const n = { san: r.san, uci: r.uci, fenBefore: before, fenAfter: r.fen, side: t.me, ok }; t.notes.push(n);
+    analyseInto(t.notes, t.notes.length - 1, () => { renderNotes(); if (ok && n.j && n.j.cls && S.pz === t && my === inst) { t.badge = { sq: n.uci.slice(2, 4), cls: n.j.cls }; board.setOverlay({ badge: t.badge }); } });
+    if (ok) t.badge = null;
     if (!ok) {
       t.failed = true; rec(false);
       board.set(r.fen, { last: r, white: t.me === 'w', interactive: false });
@@ -127,7 +135,7 @@ function viewPuzzles() {
       return;
     }
     t.fen = r.fen; t.last = r; t.step++; t.arrows = []; t.marks = {};
-    if (t.step >= t.p.moves.length || new Chess(t.fen).isGameOver()) { t.done = true; rec(!t.failed); draw(); P.fill(S.pzo, 12, net); return; }
+    if (t.step >= t.p.moves.length || new Chess(t.fen).isGameOver()) { t.done = true; t.t1 = Date.now(); rec(!t.failed); draw(); P.fill(S.pzo, 12, net); return; }
     t.busy = true; draw('Correct. Keep going…', 'good');
     setTimeout(() => { if (S.pz !== t) return; const o = apply(t.fen, t.p.moves[t.step]); t.fen = o.fen; t.last = o; t.step++; t.busy = false; draw(); }, 500);
   }
@@ -141,7 +149,7 @@ function viewPuzzles() {
   }
   function solution() {
     if (t.done) return; t.failed = true; rec(false); t.busy = true; t.arrows = []; t.marks = {};
-    const go = () => { if (S.pz !== t) return; if (t.step >= t.p.moves.length) { t.busy = false; t.done = true; draw(); return; }
+    const go = () => { if (S.pz !== t) return; if (t.step >= t.p.moves.length) { t.busy = false; t.done = true; t.t1 = Date.now(); draw(); return; }
       const r = apply(t.fen, t.p.moves[t.step]); t.fen = r.fen; t.last = r; t.step++; board.set(t.fen, { last: r, white: t.me === 'w', interactive: false }); setTimeout(go, 750); };
     go();
   }
@@ -185,6 +193,8 @@ function viewPuzzles() {
   }
   if (!t) t = start();
   if (!t) { net(); return; }
+  if (!t.t0) t.t0 = Date.now();
+  const timer = setInterval(() => { if (my !== inst) return clearInterval(timer); const ms = (t.t1 || Date.now()) - t.t0; clocks('', '⏱ ' + fmtClock(ms).replace(/\.\d$/, ''), t.done ? '' : 'bot'); }, 500);
   srcCard(); net();
   if (t.step === 0 && !t.p.noSetup && !t.started) {
     t.started = true; board.set(t.p.fen, { white: t.me === 'w', interactive: false });
@@ -192,7 +202,7 @@ function viewPuzzles() {
     setTimeout(() => { if (S.pz !== t) return; const r = apply(t.fen, t.p.moves[0]); t.fen = r.fen; t.last = r; t.step = 1; t.start = t.fen; t.busy = false; draw(); }, 700);
   } else draw();
   P.fill(S.pzo, 12, net);
-  cleanup = () => { };
+  cleanup = () => { clearInterval(timer); };
 }
 function welcome() {
   main.innerHTML = `<section class="hero"><img src="icons/crown.svg" width="64" alt=""><h1>Learn chess through puzzles</h1>
@@ -232,7 +242,7 @@ function viewLesson() {
   ebar.hidden = true;
   let ex = { fen: l.fen, step: 0, done: false, busy: false, notes: [] };
   const st = (h, c = '') => { const e = $('#st'); e.className = 'st ' + c; e.innerHTML = h; };
-  const draw = (arrows = []) => { board.set(ex.fen, { last: ex.last, white: side === 'w', interactive: !ex.done && !ex.busy, arrows }); labels(colName(side === 'w' ? 'b' : 'w'), 'YOU · ' + colName(side)); };
+  const draw = (arrows = []) => { board.set(ex.fen, { last: ex.last, white: side === 'w', interactive: !ex.done && !ex.busy, arrows, badge: ex.badge, sound: true }); labels(colName(side === 'w' ? 'b' : 'w'), 'YOU · ' + colName(side)); };
   const renderNotes = () => { if (my === inst) $('#notes').innerHTML = ex.notes.map(noteHTML).join(''); };
   async function onMove(m) {
     if (ex.done || ex.busy) return;
@@ -248,9 +258,11 @@ function viewLesson() {
     const vb = povVal(b.lines[0], side), va = povVal(a.lines[0], side), mated = new Chess(r.fen).isCheckmate();
     if (mated) a.lines[0].mated = true;
     const ok = l.goal === 'mate' ? (mated || va >= 90000) : l.goal === 'win' ? va >= 250 : l.goal === 'draw' ? va >= -80 : va >= vb - l.tol;
-    ex.notes.push({ san: r.san, fenAfter: r.fen, side, j: { cls: ok ? (b.bestmove === r.uci ? 'best' : 'great') : 'mistake', after: a.lines[0], bestSan: lineSan(before, b.lines[0].pv, 1)[0], lossWp: Math.max(0, wpFor(b.lines[0], side) - wpFor(a.lines[0], side)), replyLine: a.lines[0].pv } });
+    const lcls = ok ? (b.bestmove === r.uci ? (isSacrifice(before, r.uci) ? 'brilliant' : 'best') : 'excellent') : (povVal(b.lines[0], side) - va > 300 ? 'blunder' : 'mistake');
+    ex.badge = { sq: r.uci.slice(2, 4), cls: lcls };
+    ex.notes.push({ san: r.san, fenAfter: r.fen, side, j: { cls: lcls, after: a.lines[0], bestSan: lineSan(before, b.lines[0].pv, 1)[0], lossWp: Math.max(0, wpFor(b.lines[0], side) - wpFor(a.lines[0], side)), replyLine: a.lines[0].pv } });
     renderNotes();
-    if (!ok) { ex.busy = false; draw(); st(`${esc(r.san)} doesn't do the job (${fmtScore(a.lines[0])}). Try again.`, 'bad'); return; }
+    if (!ok) { ex.busy = false; ex.badge = null; draw(); st(`${esc(r.san)} doesn't do the job (${fmtScore(a.lines[0])}). Try again.`, 'bad'); return; }
     ex.fen = r.fen; ex.last = r; ex.step++;
     setEval(ebar, a.lines[0], side === 'w');
     if (mated || ex.step >= l.moves || new Chess(ex.fen).isGameOver()) { ex.done = true; ex.busy = false; draw(); st(mated ? 'Checkmate! Lesson complete ✓' : 'Well done — lesson complete ✓', 'good'); const d = get('lessonsDone', {}); d[l.id] = Date.now(); set('lessonsDone', d); return; }
@@ -332,15 +344,22 @@ function viewGame() {
         <div class="moves" id="mv"></div></div></div>`;
   const board = new Board($('.bd'), { onMove: m => onGuess(m), canMove: c => !!guess && c === guess.side }), ebar = $('.ebar');
   const fen = () => G.fenAt(g, ply);
+  function classes() {
+    if (g.analysis) { if (!g._cls) g._cls = g.moves.map((m, i) => { try { const nx = g.moves[i + 1] && g.analysis.best[i + 1] === g.moves[i + 1].uci ? g.analysis.evals[i + 2] : null; return quickClass(G.fenAt(g, i), m.uci, g.analysis.evals[i], g.analysis.evals[i + 1], g.analysis.best[i], nx); } catch (e) { return ''; } }); return g._cls; }
+    if (!g._book) g._book = g.moves.map((m, i) => bookName(m.fen) && bookName(G.fenAt(g, i)) ? 'book' : '');
+    return g._book;
+  }
   function draw() {
     const last = ply ? g.moves[ply - 1] : null;
-    board.set(fen(), { last, white, interactive: !!guess && turn(fen()) === guess.side && ply < g.moves.length });
+    const marks = classes();
+    board.set(fen(), { last, white, interactive: !!guess && turn(fen()) === guess.side && ply < g.moves.length, sound: true,
+      badge: !guess && ply && marks[ply - 1] ? { sq: g.moves[ply - 1].uci.slice(2, 4), cls: marks[ply - 1] } : null });
     labels(white ? `${g.black}${g.belo ? ' (' + g.belo + ')' : ''} · BLACK` : `${g.white}${g.welo ? ' (' + g.welo + ')' : ''} · WHITE`, white ? `${g.white}${g.welo ? ' (' + g.welo + ')' : ''} · WHITE` : `${g.black}${g.belo ? ' (' + g.belo + ')' : ''} · BLACK`);
     $('#mvno').textContent = ply ? Math.ceil(ply / 2) : 0;
     const rep = g.analysis ? G.moveReport(g) : null;
-    const marks = rep ? Object.fromEntries(rep.rows.map(r => [r.ply, ['inacc', 'mistake', 'blunder'].includes(r.cls) ? r.cls : ''])) : {};
-    $('#mv').innerHTML = movesList(g, ply, marks); const on = $('#mv .on'); if (on) on.scrollIntoView({ block: 'nearest' });
-    if (rep) $('#crit').innerHTML = rep.critical.length ? `<p class="small"><b>Turning points</b> — tap to jump</p><div class="chips">${rep.critical.map(r => `<button class="chip" data-p="${r.ply + 1}">${Math.floor(r.ply / 2) + 1}${r.white ? '.' : '…'} ${esc(g.moves[r.ply].san)}</button>`).join('')}</div>` : '';
+    $('#mv').innerHTML = movesList(g, ply, guess ? {} : marks); const on = $('#mv .on'); if (on) on.scrollIntoView({ block: 'nearest' });
+    if (rep) { const key = marks.map((c, i) => [c, i]).filter(([c]) => ['brilliant', 'great', 'mistake', 'blunder'].includes(c)).slice(0, 10);
+      $('#crit').innerHTML = key.length ? `<p class="small"><b>Key moments</b> — tap to jump</p><div class="chips">${key.map(([c, i]) => `<button class="chip" data-p="${i + 1}">${badgeHTML(c, false)} ${Math.floor(i / 2) + 1}${i % 2 ? '…' : '.'} ${esc(g.moves[i].san)}</button>`).join('')}</div>` : ''; }
     $$('#crit .chip').forEach(b => b.onclick = () => { ply = +b.dataset.p; draw(); analyseHere(); });
     if (guess) $('#st').innerHTML = `Guess the move · score <b>${guess.score}</b> / ${guess.max * 2}${ply >= g.moves.length ? ' · game over' : turn(fen()) === guess.side ? ' · your guess' : ''}`;
   }
@@ -351,7 +370,7 @@ function viewGame() {
       const f = fen();
       if (ply > 0) {
         $('#mvnote').innerHTML = noteHTML({ san: `${Math.ceil(ply / 2)}${ply % 2 ? '.' : '…'} ${g.moves[ply - 1].san}` });
-        judgeMove(G.fenAt(g, ply - 1), g.moves[ply - 1].uci).then(j => { if (t === tok && my === inst) $('#mvnote').innerHTML = noteHTML({ san: `${Math.ceil(ply / 2)}${ply % 2 ? '.' : '…'} ${g.moves[ply - 1].san}`, j, fenAfter: f, side: turn(G.fenAt(g, ply - 1)) }); }).catch(() => { });
+        judgeMove(G.fenAt(g, ply - 1), g.moves[ply - 1].uci).then(j => { if (t === tok && my === inst) { $('#mvnote').innerHTML = noteHTML({ san: `${Math.ceil(ply / 2)}${ply % 2 ? '.' : '…'} ${g.moves[ply - 1].san}`, j, fenAfter: f, side: turn(G.fenAt(g, ply - 1)) }); if (!g.analysis && j && j.cls && !guess) board.setOverlay({ badge: { sq: g.moves[ply - 1].uci.slice(2, 4), cls: j.cls } }); } }).catch(() => { });
       } else $('#mvnote').innerHTML = '';
       try {
         const r = await engine.analyse(f, { multipv: 3 });
@@ -359,7 +378,7 @@ function viewGame() {
         if (!r.lines.length) { $('#lines').innerHTML = '<p class="muted small">Game over.</p>'; return; }
         setEval(ebar, r.lines[0], white);
         $('#lines').innerHTML = r.lines.map(l => `<div class="opt"><span class="ev">${fmtScore(l)}</span><span>${esc(numbered(f, lineSan(f, l.pv, 6)))}</span></div>`).join('') + `<p class="src">${r.source === 'cloud' ? 'Lichess cloud' : 'Stockfish on your phone'} · depth ${r.depth}</p>`;
-        if (!guess) board.set(f, { last: ply ? g.moves[ply - 1] : null, white, interactive: false, arrows: [{ ...uciObj(r.lines[0].pv[0]), c: 'g' }] });
+        if (!guess) board.setOverlay({ arrows: [{ ...uciObj(r.lines[0].pv[0]), c: 'g' }] });
       } catch (e) { if (t === tok) $('#lines').innerHTML = '<p class="muted small">Engine unavailable.</p>'; }
     }, 250);
   }
@@ -393,7 +412,7 @@ function viewGame() {
   $('#full').onclick = async () => {
     const b = $('#full'); b.disabled = true;
     await G.analyseGame(g, (p, n) => { if (my === inst) b.textContent = `Analysing ${p}/${n}…`; }, () => my !== inst);
-    if (my === inst) { b.textContent = 'Analysed ✓'; draw(); }
+    if (my === inst) { g._cls = null; b.textContent = 'Analysed ✓'; draw(); }
   };
   $('#back').onclick = () => location.hash = 'masters';
   draw(); analyseHere();
@@ -402,72 +421,157 @@ function viewGame() {
 function movesList(g, cur, marks = {}) {
   const c = new Chess(g.startFen); let n = c.moveNumber(), w = c.turn() === 'w', h = '';
   g.moves.forEach((m, i) => { if (w) h += `<span class="mn">${n}.</span>`; else if (i === 0) h += `<span class="mn">${n}…</span>`;
-    h += `<button class="mv ${i + 1 === cur ? 'on' : ''} ${marks[i] ? 'c-' + marks[i] : ''}" data-p="${i + 1}">${esc(m.san)}${marks[i] ? `<b>${CLS[marks[i]][0]}</b>` : ''}</button>`; if (!w) n++; w = !w; });
+    h += `<button class="mv ${i + 1 === cur ? 'on' : ''}" data-p="${i + 1}">${marks[i] && !['good', 'excellent'].includes(marks[i]) ? badgeHTML(marks[i], false) : ''}${esc(m.san)}</button>`; if (!w) n++; w = !w; });
   return h;
 }
 
 // =====================================================================
 // PLAY IT OUT vs Stockfish (from any puzzle / master position) with move-by-move analysis
 // =====================================================================
-function newPlay(fen, me, label) { const r = P.profile().rating; return { start: fen, fen, me, label, moves: [], notes: [], level: Math.min(3200, r + 300), over: false, showEval: false }; }
+function newPlay(fen, me, label) { const r = P.profile().rating; return { start: fen, fen, me, label, hist: [fen], moves: [], notes: [], level: Math.min(3200, r + 300), over: false, showEval: false, guide: get('guide', true), tc: get('tc', '5+3'), undos: 0 }; }
+const TCS = [['none', 'No clock'], ['3+2', '3 + 2'], ['5+3', '5 + 3'], ['10+5', '10 + 5']];
 function viewPlay() {
   const g = S.pl; if (!g) { location.hash = 'puzzles'; return; }
-  const my = inst; let tok = 0;
-  main.innerHTML = `<div class="split"><div class="left">${stageHTML()}</div><div class="side">
-    <div class="big"><b id="mvno">1</b><span>MOVE</span></div>
+  const my = inst; let tok = 0, gseq = 0;
+  const started = () => g.moves.length > 0;
+  if (!g.clock && g.tc !== 'none') { const [m, inc] = g.tc.split('+').map(Number); g.clock = { w: m * 60000, b: m * 60000, inc: inc * 1000, run: null, ts: 0 }; }
+  main.innerHTML = `<div class="split"><div class="left">${stageHTML()}
+      <div class="nav"><button id="undo" aria-label="Undo">↶ Undo</button><button id="gd" aria-label="Guide">◎ Guide</button><button id="ev" aria-label="Eval bar">▮ Eval</button><button id="fl" aria-label="Flip">⇅</button></div></div>
+    <div class="side"><div class="big"><b id="mvno">1</b><span>MOVE</span></div>
     <p class="small muted">From ${esc(g.label)}</p>
-    <div class="chips" id="lv">${[[Math.min(3200, P.profile().rating + 300), 'Your level +300'], [2500, 'Master 2500'], [3200, 'Full strength']].map(([v, t]) => `<button class="chip ${g.level === v ? 'on' : ''}" data-v="${v}" ${g.moves.length ? 'disabled' : ''}>${t}</button>`).join('')}</div>
-    <p id="st" class="st"></p><div class="row" id="acts"></div><h3>Every move, analysed</h3><div id="notes"></div></div></div>`;
-  const board = new Board($('.bd'), { onMove: m => userMove(m), canMove: c => c === g.me }), ebar = $('.ebar');
-  $$('#lv .chip').forEach(b => b.onclick = () => { g.level = +b.dataset.v; viewPlay(); });
-  const renderNotes = () => { if (my === inst) $('#notes').innerHTML = g.notes.length ? g.notes.slice().reverse().map(noteHTML).join('') : '<p class="muted small">Your moves appear here with the engine\'s verdict.</p>'; };
+    <div id="setup"><div class="chips" id="lv">${[[Math.min(3200, P.profile().rating + 300), 'Your level +300'], [2500, 'Master 2500'], [3200, 'Full strength']].map(([v, t]) => `<button class="chip ${g.level === v ? 'on' : ''}" data-v="${v}">${t}</button>`).join('')}</div>
+      <div class="chips" id="tc">${TCS.map(([k, t]) => `<button class="chip ${g.tc === k ? 'on' : ''}" data-v="${k}">⏱ ${t}</button>`).join('')}</div></div>
+    <p id="st" class="st"></p><div class="row" id="acts"></div><div id="gtip" class="small muted"></div><h3>Every move, analysed</h3><div id="notes"></div></div></div>`;
+  const board = new Board($('.bd'), { onMove: m => userMove(m), canMove: c => c === g.me, onSelect: sq => guide(sq), onHover: sq => guide(sq) }), ebar = $('.ebar');
+  $$('#lv .chip').forEach(b => b.onclick = () => { if (started()) return; g.level = +b.dataset.v; viewPlay(); });
+  $$('#tc .chip').forEach(b => b.onclick = () => { if (started()) return; g.tc = b.dataset.v; set('tc', g.tc); g.clock = null; viewPlay(); });
+  const renderNotes = () => { if (my === inst) $('#notes').innerHTML = g.notes.length ? g.notes.slice().reverse().map(noteHTML).join('') : '<p class="muted small">Each of your moves gets an icon: !! brilliant, ! great, ★ best, 📖 book … ?? blunder.</p>'; };
+  // ---------- guide: own hanging pieces + safe / risky / danger squares ----------
+  let scores = null;
+  function baseTints() {
+    const t = {};
+    if (g.guide && !g.over && turn(g.fen) === g.me) for (const sq of hangingSquares(g.fen, g.me)) t[sq] = 'hang';
+    return t;
+  }
+  function staticTints(sq) {
+    const c = new Chess(g.fen), t = baseTints();
+    for (const m of c.moves({ square: sq, verbose: true })) {
+      const a = new Chess(g.fen); a.move(m.lan);
+      t[m.to] = a.isCheckmate() ? 'safe' : (enPrise(a, m.to, g.me) && (m.captured ? 0 : 1) || isSacrifice(g.fen, m.lan)) ? 'danger' : 'maybe';
+    }
+    return t;
+  }
+  function engineTints(sq) {
+    if (!scores) return null;
+    const c = new Chess(g.fen), t = baseTints(), vals = Object.values(scores).map(v => wpFor(v, g.me)), best = Math.max(...vals);
+    for (const m of c.moves({ square: sq, verbose: true })) {
+      const sc = scores[m.lan]; if (!sc) { t[m.to] = 'maybe'; continue; }
+      const loss = best - wpFor(sc, g.me); t[m.to] = loss < 4 ? 'safe' : loss < 14 ? 'risky' : 'danger';
+    }
+    return t;
+  }
+  let gsel = null;
+  function guide(sq) {
+    gsel = sq;
+    if (!g.guide || g.over || turn(g.fen) !== g.me) return;
+    if (!sq) { board.setOverlay({ tints: baseTints() }); $('#gtip').textContent = ''; return; }
+    const et = engineTints(sq);
+    board.setOverlay({ tints: et || staticTints(sq) });
+    $('#gtip').innerHTML = et ? '<span class="key k-safe"></span> safe <span class="key k-risky"></span> risky <span class="key k-danger"></span> loses material or the game' : 'Quick check… <span class="key k-danger"></span> = the piece can be taken';
+  }
+  async function computeGuide() {
+    scores = null; if (!g.guide || g.over || turn(g.fen) !== g.me) return;
+    const seq = ++gseq, fen0 = g.fen, ucis = new Chess(fen0).moves({ verbose: true }).map(m => m.lan);
+    try { const sc = await engine.scoreMoves(fen0, ucis, { depth: 8, isStale: () => seq !== gseq || g.fen !== fen0 }); if (seq !== gseq || g.fen !== fen0 || my !== inst) return; scores = sc; if (gsel) guide(gsel); } catch (e) { }
+  }
+  // ---------- clock ----------
+  const myLabel = () => `YOU · ${colName(g.me)}`, oppLabel = () => `STOCKFISH ${g.level >= 3200 ? 'FULL' : g.level} · ${colName(g.me === 'w' ? 'b' : 'w')}`;
+  function clockTick() {
+    if (!g.clock) { clocks('', ''); return; }
+    const k = g.clock, now = Date.now(), live = c => k[c] - (k.run === c && !g.over ? now - k.ts : 0);
+    const opp = g.me === 'w' ? 'b' : 'w';
+    clocks(fmtClock(live(opp)), fmtClock(live(g.me)), k.run === opp ? 'top' : k.run === g.me ? 'bot' : '');
+    if (!g.over && k.run && live(k.run) <= 0) { k[k.run] = 0; finish(k.run !== g.me, false, k.run === g.me ? 'You lost on time' : 'Stockfish lost on time'); }
+  }
+  function switchClock(justMoved) {
+    const k = g.clock; if (!k || g.over) return; const now = Date.now();
+    if (k.run === justMoved) { k[justMoved] -= now - k.ts; k[justMoved] += k.inc; }
+    k.run = justMoved === 'w' ? 'b' : 'w'; k.ts = now;
+  }
+  const timer = setInterval(() => { if (my !== inst) return clearInterval(timer); clockTick(); }, 100);
+  // ---------- drawing ----------
   function draw(msg) {
-    board.set(g.fen, { last: g.last, white: g.me === 'w', interactive: !g.over && !g.thinking && turn(g.fen) === g.me });
-    labels(`STOCKFISH ${g.level >= 3200 ? 'FULL' : g.level} · ${colName(g.me === 'w' ? 'b' : 'w')}`, `YOU · ${colName(g.me)}`);
+    board.set(g.fen, { last: g.last, white: (g.me === 'w') !== !!g.flipped, interactive: !g.over && !g.thinking && turn(g.fen) === g.me, badge: g.badge, tints: baseTints(), sound: true });
+    labels(oppLabel(), myLabel()); clockTick();
     $('#mvno').textContent = new Chess(g.fen).moveNumber();
     ebar.hidden = !g.showEval && !g.over;
-    $('#st').innerHTML = msg || (g.over ? `<b>${esc(g.text)}</b>${g.acc != null ? ` · your accuracy ${g.acc}%` : ''}` : g.thinking ? 'Stockfish is thinking…' : 'Your move');
-    $('#acts').innerHTML = g.over ? '<button class="btn green" id="again">Play again</button><button class="btn" id="bk">Back to puzzles</button>'
-      : `<button class="btn ghost" id="ev">${g.showEval ? 'Hide' : 'Show'} eval bar</button><button class="btn ghost danger" id="res">Resign</button>`;
+    $('#setup').hidden = started();
+    $('#st').innerHTML = msg || (g.over ? `<b>${esc(g.text)}</b>${g.acc != null ? ` · your accuracy ${g.acc}%` : ''}${g.undos ? ` · ${g.undos} undo${g.undos > 1 ? 's' : ''}` : ''}` : g.thinking ? 'Stockfish is thinking…' : 'Your move' + (g.guide ? ' — tap a piece to see safe squares' : ''));
+    $('#acts').innerHTML = g.over ? '<button class="btn green" id="again">Play again</button><button class="btn" id="bk">Back to puzzles</button>' : '<button class="btn ghost danger" id="res">Resign</button>';
     const on = (id, f) => { const e = $('#' + id); if (e) e.onclick = f; };
-    on('again', () => { S.pl = { ...newPlay(g.start, g.me, g.label), level: g.level }; viewPlay(); });
+    on('again', () => { S.pl = { ...newPlay(g.start, g.me, g.label), level: g.level, tc: g.tc }; viewPlay(); });
     on('bk', () => { location.hash = 'puzzles'; });
-    on('ev', () => { g.showEval = !g.showEval; draw(); if (g.showEval) evalNow(); });
     on('res', () => finish(false, false, 'You resigned'));
+    $('#gd').classList.toggle('on', g.guide); $('#ev').classList.toggle('on', g.showEval);
+    $('#undo').disabled = g.over || g.moves.length < 1 || (g.moves.length < 2 && turn(g.start) !== g.me && !g.thinking);
     renderNotes();
   }
   async function evalNow() { try { const r = await engine.analyse(g.fen, { multipv: 1, depth: 12 }); if (my === inst && r.lines[0]) setEval(ebar, r.lines[0], g.me === 'w'); } catch (e) { } }
+  function push(r) { g.fen = r.fen; g.last = r; g.moves.push(r.uci); g.hist.push(r.fen); }
   function userMove(m) {
     if (g.over || g.thinking || turn(g.fen) !== g.me) return;
     const before = g.fen, r = apply(before, m); if (!r) return;
-    g.fen = r.fen; g.last = r; g.moves.push(r.uci);
-    const n = { san: `${new Chess(before).moveNumber()}${g.me === 'w' ? '.' : '…'} ${r.san}`, uci: r.uci, fenBefore: before, fenAfter: r.fen, side: g.me };
-    g.notes.push(n); analyseInto(g.notes, g.notes.length - 1, () => { renderNotes(); if (g.over) summary(); });
+    gseq++; engine.local.stopTag('guide'); scores = null;
+    push(r); switchClock(g.me); g.badge = null;
+    const n = { san: `${new Chess(before).moveNumber()}${g.me === 'w' ? '.' : '…'} ${r.san}`, uci: r.uci, fenBefore: before, fenAfter: r.fen, side: g.me, ply: g.moves.length };
+    g.notes.push(n);
+    analyseInto(g.notes, g.notes.length - 1, () => { renderNotes(); if (n.j && n.j.cls && g.notes.includes(n) && my === inst) { g.badge = { sq: n.uci.slice(2, 4), cls: n.j.cls }; board.setOverlay({ badge: g.badge }); if (['brilliant', 'great'].includes(n.j.cls)) toast(`${badgeHTML(n.j.cls, false)} ${badgeName(n.j.cls)}!`); } if (g.over) summary(); });
     if (!end()) { draw(); engineMove(); }
   }
   async function engineMove() {
     const t = ++tok; g.thinking = true; draw();
-    let mv; try { mv = await engine.play(g.fen, g.level >= 3200 ? 3200 : g.level); } catch (e) { g.thinking = false; draw('The engine could not start in this browser.'); return; }
-    if (t !== tok || my !== inst || S.pl !== g) return;
-    g.thinking = false; const r = apply(g.fen, mv); if (!r) return; g.fen = r.fen; g.last = r; g.moves.push(r.uci);
-    if (!end()) { draw(); if (g.showEval) evalNow(); }
+    const k = g.clock, cap = k ? Math.max(100, Math.min(3000, (k[g.me === 'w' ? 'b' : 'w'] / 30) + k.inc * 0.6)) : null;
+    let mv; try { mv = await engine.play(g.fen, g.level >= 3200 ? 3200 : g.level, cap); } catch (e) { g.thinking = false; draw('The engine could not start in this browser.'); return; }
+    if (t !== tok || my !== inst || S.pl !== g || g.over) return;
+    g.thinking = false; const r = apply(g.fen, mv); if (!r) return; push(r); switchClock(g.me === 'w' ? 'b' : 'w');
+    if (!end()) { draw(); if (g.showEval) evalNow(); computeGuide(); }
+  }
+  function undo() {
+    if (g.over || !g.moves.length) return;
+    tok++; g.thinking = false; gseq++; engine.local.stopTag('guide');
+    const pop = () => { g.moves.pop(); g.hist.pop(); g.fen = g.hist[g.hist.length - 1]; };
+    if (turn(g.fen) === g.me) pop();           // take back the engine's reply…
+    if (g.moves.length && turn(g.fen) !== g.me) pop(); // …and your move
+    while (g.notes.length && g.notes[g.notes.length - 1].ply > g.moves.length) g.notes.pop();
+    g.last = g.moves.length ? { from: g.moves[g.moves.length - 1].slice(0, 2), to: g.moves[g.moves.length - 1].slice(2, 4) } : null;
+    g.badge = null; g.undos++;
+    if (g.clock) { g.clock.run = turn(g.fen); g.clock.ts = Date.now(); }
+    draw(); if (turn(g.fen) !== g.me) engineMove(); else computeGuide();
   }
   function end() {
     const c = new Chess(g.fen);
     if (c.isCheckmate()) { finish(c.turn() !== g.me, false, c.turn() !== g.me ? 'Checkmate — you beat Stockfish!' : 'Checkmate — Stockfish wins'); return true; }
-    if (c.isDraw()) { finish(false, true, 'Draw'); return true; }
+    if (c.isDraw()) { finish(false, true, c.isStalemate() ? 'Stalemate — draw' : 'Draw'); return true; }
     return false;
   }
-  function summary() { const done = g.notes.filter(n => n.j && n.j.cls); if (!done.length) return; g.acc = Math.round(done.reduce((s, n) => s + Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * n.j.lossWp) - 3.1669)), 0) / done.length); if (my === inst) draw(); }
+  function summary() { const done = g.notes.filter(n => n.j && n.j.cls && n.j.lossWp != null); if (!done.length) return; g.acc = Math.round(done.reduce((s, n) => s + Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * n.j.lossWp) - 3.1669)), 0) / done.length); if (my === inst) draw(); }
   function finish(win, draw_, text) {
-    g.over = true; g.thinking = false; g.text = text; tok++;
+    if (g.over) return;
+    if (g.clock && g.clock.run) { g.clock[g.clock.run] -= Date.now() - g.clock.ts; g.clock.run = null; }
+    g.over = true; g.thinking = false; g.text = text; tok++; gseq++;
     const s = get('playstats', { w: 0, d: 0, l: 0, acc: [] }); s[win ? 'w' : draw_ ? 'd' : 'l']++; set('playstats', s);
     summary(); draw(); evalNow();
+    if (win) toast('🏆 You beat Stockfish!', 3500);
     setTimeout(() => { if (g.acc != null) { const s2 = get('playstats', { w: 0, d: 0, l: 0, acc: [] }); s2.acc = (s2.acc || []).concat(g.acc).slice(-30); set('playstats', s2); } }, 4000);
   }
-  if (!g.started) { g.started = true; g.thinking = false; }
-  draw(); if (!g.over && turn(g.fen) !== g.me) engineMove();
-  cleanup = () => { tok++; };
+  $('#undo').onclick = undo;
+  $('#gd').onclick = () => { g.guide = !g.guide; set('guide', g.guide); draw(); if (g.guide) computeGuide(); toast(g.guide ? 'Guide on: red = danger, green = safe' : 'Guide off'); };
+  $('#ev').onclick = () => { g.showEval = !g.showEval; draw(); if (g.showEval) evalNow(); };
+  $('#fl').onclick = () => { g.flipped = !g.flipped; draw(); };
+  draw();
+  if (!g.over && turn(g.fen) !== g.me) { if (g.clock && !g.clock.run) { g.clock.run = turn(g.fen); g.clock.ts = Date.now(); } engineMove(); }
+  else { if (g.clock && !g.clock.run && started()) { g.clock.run = g.me; g.clock.ts = Date.now(); } computeGuide(); }
+  cleanup = () => { tok++; gseq++; clearInterval(timer); };
 }
 
 // =====================================================================
@@ -501,9 +605,9 @@ function viewProgress() {
 // =====================================================================
 let installEvt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
-const CACHE = 'chessmate-v3'; // keep in sync with sw.js
+const CACHE = 'chessmate-v4'; // keep in sync with sw.js
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/crown.svg', 'docs/qr.png', 'css/app.css', 'css/pieces.css', 'js/app.js', 'js/board.js', 'js/chess.js', 'js/store.js',
-  'js/engine.js', 'js/util.js', 'js/game.js', 'js/puzzles.js', 'js/lessons.js', 'js/classics.js', 'engine/stockfish-19-lite-single.js', 'engine/stockfish-19-lite-single.wasm'];
+  'js/engine.js', 'js/util.js', 'js/book.js', 'js/game.js', 'js/puzzles.js', 'js/lessons.js', 'js/classics.js', 'engine/stockfish-19-lite-single.js', 'engine/stockfish-19-lite-single.wasm'];
 function openSheet() {
   const s = settings(), ios = /iphone|ipad|ipod/i.test(navigator.userAgent), standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   $('#sheet').innerHTML = `<div class="sh"><div class="row sp"><h2>Settings</h2><button class="x" id="close" aria-label="Close">✕</button></div>

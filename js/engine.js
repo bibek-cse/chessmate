@@ -37,8 +37,11 @@ class Local {
   }
   send(c) { this.w && this.w.postMessage(c); }
   stop() { if (this.busy) this.send('stop'); }
+  stopTag(tag) { if (this.busy && this.tag === tag) this.send('stop'); }
   run(fen, o = {}, onInfo) {
     const job = () => new Promise(res => {
+      if (o.isStale && o.isStale()) { res({ bestmove: null, lines: [], depth: 0, source: 'device', stale: true }); return; }
+      this.tag = o.tag || null;
       const black = fen.split(' ')[1] === 'b', lines = {};
       const snap = () => Object.keys(lines).sort((a, b) => a - b).map(k => lines[k]);
       this.onLine = l => {
@@ -62,7 +65,8 @@ class Local {
       this.send('setoption name UCI_LimitStrength value ' + (lim ? 'true' : 'false'));
       if (lim) this.send('setoption name UCI_Elo value ' + Math.min(3190, o.elo));
       this.send('position fen ' + fen);
-      this.send(o.infinite ? 'go infinite' : o.movetime ? 'go movetime ' + o.movetime : 'go depth ' + (o.depth || 14));
+      const sm = o.searchmoves && o.searchmoves.length ? ' searchmoves ' + o.searchmoves.join(' ') : '';
+      this.send((o.infinite ? 'go infinite' : o.movetime ? 'go movetime ' + o.movetime : 'go depth ' + (o.depth || 14)) + sm);
     });
     const p = this.chain.then(() => this.start()).then(job);
     this.chain = p.catch(() => {});
@@ -123,10 +127,19 @@ class Engine {
     return r;
   }
   stop() { this.local.stop(); }
+  // Score a set of moves in one search (on device). Returns {uci: score(white POV)} — used by the safe/danger guide.
+  async scoreMoves(fen, ucis, { depth = 9, isStale } = {}) {
+    if (!ucis.length) return {};
+    this.local.stopTag('guide');
+    const r = await this.local.run(fen, { depth, multipv: Math.min(ucis.length, 40), searchmoves: ucis, tag: 'guide', isStale });
+    const out = {}; for (const l of r.lines) if (l.pv && l.pv[0]) out[l.pv[0]] = l.mate !== undefined ? { mate: l.mate } : { cp: l.cp };
+    return out;
+  }
   // Choose a move at a playing strength between 500 and 3200 (always on device).
-  async play(fen, elo) {
-    if (elo >= 3200) return (await this.local.run(fen, { movetime: 900 })).bestmove;
-    if (elo >= 1320) return (await this.local.run(fen, { elo, movetime: 500 })).bestmove;
+  async play(fen, elo, cap) {
+    const mt = t => cap ? Math.max(80, Math.min(t, cap)) : t;
+    if (elo >= 3200) return (await this.local.run(fen, { movetime: mt(900) })).bestmove;
+    if (elo >= 1320) return (await this.local.run(fen, { elo, movetime: mt(500) })).bestmove;
     // Below Stockfish's 1320 floor: shallow search + controlled mistakes. Strength is an estimate.
     const depth = elo < 700 ? 1 : elo < 1000 ? 2 : 4;
     const r = await this.local.run(fen, { depth, multipv: 4, skill: 0 });

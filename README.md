@@ -20,7 +20,7 @@
 <table align="center"><tr>
 <td align="center"><img src="docs/screen-puzzle.png" width="230" alt="Puzzle with engine notes"><br><sub><b>Puzzles</b> from real games</sub></td>
 <td align="center"><img src="docs/screen-lesson.png" width="230" alt="Textbook lesson"><br><sub><b>Learn</b>: the offline textbook</sub></td>
-<td align="center"><img src="docs/screen-progress.png" width="230" alt="Stage ladder"><br><sub><b>Progress</b>: stage ladder</sub></td>
+<td align="center"><img src="docs/screen-play.png" width="230" alt="Guide shows safe and dangerous squares"><br><sub><b>Play</b>: the guide colours safe and danger squares</sub></td>
 </tr></table>
 
 <div align="center">
@@ -44,6 +44,16 @@ Every puzzle is a short lesson:
 3. **The idea:** a textbook note explains the theme (fork, deflection, zugzwang…) and links to the full lesson.
 4. **Other options:** the engine shows the **top 4 moves** in the starting position, with lines you can tap to watch on the board.
 5. **Play it out:** continue from the puzzle against Stockfish. Every move is analysed again, and you get an accuracy score at the end.
+
+## 🎯 On-board coach (like chess.com)
+
+- **Move icons on the board:** each move gets a badge on its square:
+  - <b>!!</b> Brilliant (a good sacrifice) · <b>!</b> Great (the only good move) · <b>★</b> Best · 👍 Excellent · ✓ Good · 📖 Book (a known opening line)
+  - <b>?!</b> Inaccuracy · <b>?</b> Mistake · <b>??</b> Blunder
+- **Safe-square guide:** tap a piece and its target squares turn **green** (safe), **amber** (risky) or **red** (loses material or the game), based on a Stockfish check of every legal move. Your pieces that can be won get a red outline.
+- **Clock:** play it out with 3+2, 5+3 or 10+5, or with no clock. The engine has to manage its time too.
+- **Undo** takes back your last move together with the engine's reply.
+- **Built for phones:** pieces glide between squares, follow your finger when you drag, and each move gives a short vibration and click sound.
 
 ## ⚡ Four tabs
 
@@ -102,8 +112,9 @@ No build step and no framework. To host it free, see **[GITHUB_UPLOAD.md](GITHUB
 | `js/lessons.js` | The textbook (17 engine-checked lessons) |
 | `js/classics.js` | 6 classic games (each checked move by move) |
 | `js/engine.js` | Lichess cloud eval → Stockfish on the phone |
-| `js/util.js`, `js/game.js` | Move judging, game analysis, PGN |
-| `js/board.js`, `js/chess.js` | Touch board, chess rules |
+| `js/util.js`, `js/game.js` | Move icons (brilliant … blunder), safety checks, game analysis, PGN |
+| `js/book.js` | Offline opening book (45 main lines) for 📖 book moves |
+| `js/board.js`, `js/chess.js` | Animated touch board: drag, badges, guide colours; chess rules |
 | `engine/` | Stockfish 19 lite (WebAssembly) |
 | `sw.js`, `manifest.webmanifest` | Offline cache, install |
 
