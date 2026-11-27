@@ -428,7 +428,7 @@ function movesList(g, cur, marks = {}) {
 // =====================================================================
 // PLAY IT OUT vs Stockfish (from any puzzle / master position) with move-by-move analysis
 // =====================================================================
-function newPlay(fen, me, label) { const r = P.profile().rating; return { start: fen, fen, me, label, hist: [fen], moves: [], notes: [], level: Math.min(3200, r + 300), over: false, showEval: false, guide: get('guide', true), tc: get('tc', '5+3'), undos: 0 }; }
+function newPlay(fen, me, label) { const r = P.profile().rating; return { start: fen, fen, me, label, hist: [fen], moves: [], notes: [], level: Math.min(3200, r + 1000), over: false, showEval: false, guide: get('guide', true), tc: get('tc', '5+3'), undos: 0 }; }
 const TCS = [['none', 'No clock'], ['3+2', '3 + 2'], ['5+3', '5 + 3'], ['10+5', '10 + 5']];
 function viewPlay() {
   const g = S.pl; if (!g) { location.hash = 'puzzles'; return; }
@@ -439,7 +439,7 @@ function viewPlay() {
       <div class="nav"><button id="undo" aria-label="Undo">↶ Undo</button><button id="gd" aria-label="Guide">◎ Guide</button><button id="ev" aria-label="Eval bar">▮ Eval</button><button id="fl" aria-label="Flip">⇅</button></div></div>
     <div class="side"><div class="big"><b id="mvno">1</b><span>MOVE</span></div>
     <p class="small muted">From ${esc(g.label)}</p>
-    <div id="setup"><div class="chips" id="lv">${[[Math.min(3200, P.profile().rating + 300), 'Your level +300'], [2500, 'Master 2500'], [3200, 'Full strength']].map(([v, t]) => `<button class="chip ${g.level === v ? 'on' : ''}" data-v="${v}">${t}</button>`).join('')}</div>
+    <div id="setup"><div class="chips" id="lv">${[[Math.min(3200, P.profile().rating + 1000), `Your level +1000 (${Math.min(3200, P.profile().rating + 1000)})`], [2500, 'Master 2500'], [3200, 'Full strength']].filter((x, i, a) => a.findIndex(y => y[0] === x[0]) === i).map(([v, t]) => `<button class="chip ${g.level === v ? 'on' : ''}" data-v="${v}">${t}</button>`).join('')}</div>
       <div class="chips" id="tc">${TCS.map(([k, t]) => `<button class="chip ${g.tc === k ? 'on' : ''}" data-v="${k}">⏱ ${t}</button>`).join('')}</div></div>
     <p id="st" class="st"></p><div class="row" id="acts"></div><div id="gtip" class="small muted"></div><h3>Every move, analysed</h3><div id="notes"></div></div></div>`;
   const board = new Board($('.bd'), { onMove: m => userMove(m), canMove: c => c === g.me, onSelect: sq => guide(sq), onHover: sq => guide(sq) }), ebar = $('.ebar');
